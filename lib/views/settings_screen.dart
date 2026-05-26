@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medication_reminder/core/theme/colors.dart';
+import 'package:medication_reminder/views/user_management_screen.dart';
+import 'package:medication_reminder/views/medication_summary_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   final ValueNotifier<ThemeMode> themeNotifier;
@@ -13,7 +15,7 @@ class SettingsScreen extends StatelessWidget {
       builder: (context, themeMode, child) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Settings'),
+            title: const Text('Cài đặt'),
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
           ),
@@ -21,7 +23,7 @@ class SettingsScreen extends StatelessWidget {
             children: [
               ListTile(
                 leading: const Icon(Icons.dark_mode),
-                title: const Text('Dark Mode'),
+                title: const Text('Chế độ tối'),
                 trailing: Switch(
                   value: themeMode == ThemeMode.dark,
                   onChanged: (value) {
@@ -34,20 +36,36 @@ class SettingsScreen extends StatelessWidget {
               const Divider(),
 
               ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: const Text('About'),
-                subtitle:
-                    const Text('Medication Reminder App v1.0.0'),
+                leading: const Icon(Icons.person_add_alt_1),
+                title: const Text('Quản lý người dùng'),
+                subtitle: const Text('Thêm hoặc xóa người dùng thuốc'),
                 onTap: () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: 'Medication Reminder',
-                    applicationVersion: '1.0.0',
-                    applicationIcon:
-                        const Icon(Icons.medication, size: 48),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const UserManagementScreen(),
+                    ),
                   );
                 },
               ),
+
+              const Divider(),
+
+              ListTile(
+                leading: const Icon(Icons.bar_chart),
+                title: const Text('Tổng kết thuốc đã uống'),
+                subtitle: const Text('Thống kê tổng số lần đã uống của từng loại'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MedicationSummaryScreen(),
+                    ),
+                  );
+                },
+              ),
+              
+              const Divider(),
             ],
           ),
         );

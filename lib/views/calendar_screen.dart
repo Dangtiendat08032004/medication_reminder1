@@ -6,6 +6,7 @@ import 'package:medication_reminder/bloc/medication_state.dart';
 import 'package:medication_reminder/core/theme/colors.dart';
 import 'package:medication_reminder/models/medication.dart';
 import 'package:intl/intl.dart';
+import 'package:medication_reminder/views/add_edit_medication_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -22,11 +23,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
   String _key(DateTime date) =>
       DateFormat('yyyy-MM-dd').format(date);
 
+  void _openEditScreen(BuildContext context, Medication medication) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: context.read<MedicationBloc>(),
+          child: AddEditMedicationScreen(
+            medication: medication,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medication Calendar'),
+        title: const Text('Lịch uống thuốc'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
@@ -53,7 +68,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
         builder: (context, state) {
           if (state is MedicationLoaded) {
             _allMedications = state.medications;
-            // Always clear cache on rebuild to ensure fresh data
             _medicationCache.clear();
             
             return Column(
@@ -143,7 +157,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              DateFormat('EEEE, MMMM d')
+              DateFormat('EEEE, d MMMM')
                   .format(_selectedDay),
               style:
                   const TextStyle(fontSize: 16),
@@ -186,34 +200,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
         return Card(
           margin: const EdgeInsets.symmetric(
-              horizontal: 16, vertical: 4),
-          child: ListTile(
-            title: Text(medication.name),
-            subtitle: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(medication.dosage),
-                if (medication.notes != null &&
-                    medication
-                        .notes!.isNotEmpty)
-                  Text(
-                    'Ghi chú: ${medication.notes}',
-                    style: const TextStyle(
-                        fontStyle:
-                            FontStyle.italic),
-                  ),
-              ],
+              horizontal: 16, vertical: 8),
+          child: ExpansionTile(
+            leading: const CircleAvatar(
+              backgroundColor: AppColors.primary,
+              child: Icon(Icons.medication, color: Colors.white),
             ),
+            title: Text(medication.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(medication.dosage),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  medication.times
-                      .map((time) =>
-                          DateFormat.Hm()
-                              .format(time))
-                      .join(', '),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () => _openEditScreen(context, medication),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -221,27 +221,68 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
               ],
             ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(),
+                    _buildDetailRow(Icons.access_time, 'Lịch nhắc hàng ngày:', 
+                        medication.times.map((t) => DateFormat('HH:mm').format(t)).join(', ')),
+                    const SizedBox(height: 8),
+                    _buildDetailRow(Icons.calendar_today, 'Thời gian điều trị:', 
+                        '${DateFormat('dd/MM/yyyy').format(medication.startDate)} - ${medication.endDate != null ? DateFormat('dd/MM/yyyy').format(medication.endDate!) : 'Dài hạn'}'),
+                    if (medication.notes != null && medication.notes!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      _buildDetailRow(Icons.note_alt_outlined, 'Ghi chú:', medication.notes!),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: AppColors.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: const TextStyle(color: Colors.black, fontSize: 14),
+              children: [
+                TextSpan(text: '$label ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                TextSpan(text: value),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _confirmDelete(BuildContext context, Medication medication) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Xác nhận xóa'),
         content: Text('Bạn có chắc chắn muốn xóa thuốc "${medication.name}" và toàn bộ lịch nhắc không?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () {
               context.read<MedicationBloc>().add(DeleteMedication(medication.id));
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Đã xóa ${medication.name}')),
               );

@@ -9,13 +9,13 @@ import 'package:medication_reminder/services/notification_service.dart' as notif
 import 'package:medication_reminder/views/calendar_screen.dart';
 import 'package:medication_reminder/views/home_screen.dart';
 import 'package:medication_reminder/views/settings_screen.dart';
+import 'package:medication_reminder/views/medication_log_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await HiveService.init();
-
   final notificationService = notif.NotificationService();
   await notificationService.init();
 
@@ -121,6 +121,7 @@ class _MainScreenState extends State<MainScreen> {
     _widgetOptions = <Widget>[
       const HomeScreen(),
       const CalendarScreen(),
+      const MedicationLogScreen(),
       SettingsScreen(themeNotifier: widget.themeNotifier),
     ];
   }
@@ -138,21 +139,26 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed, // Giúp hiển thị tốt hơn khi có > 3 items
         backgroundColor: Colors.white,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: 'Thuốc',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
-            label: 'Calendar',
+            label: 'Lịch',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Nhật ký',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Settings',
+            label: 'Cài đặt',
           ),
         ],
       ),
